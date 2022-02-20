@@ -12,12 +12,25 @@ set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
-add_subdirectory(lib/glfw-3.3.6)
+find_package ( OpenGL REQUIRED )
 
-add_executable(enyin main.cpp)
+add_subdirectory(lib/glfw-3.3.6)
+add_subdirectory(lib/tinygltf)
+
+add_executable(enyin 
+  main.cpp)
 
 target_link_libraries(enyin glfw)
+target_link_libraries(enyin tinygltf)
 
 if (APPLE)
   target_link_libraries(enyin "-framework OpenGL")
 endif()
+
+file(GLOB_RECURSE assets ${CMAKE_CURRENT_SOURCE_DIR}/assets/*)
+
+add_custom_command(
+        TARGET enyin POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+                ${CMAKE_CURRENT_SOURCE_DIR}/assets
+                $<TARGET_FILE_DIR:${PROJECT_NAME}>/assets)

@@ -2,21 +2,38 @@
 #define SOKOL_GLCORE33
 #include "sokol_gfx.h"
 
-#define GL_SILENCE_DEPRECATION
-#include <OpenGL/gl.h>
-
 #include <GLFW/glfw3.h>
 
-struct Vector2 {
-    float x;
-    float y;
-};
+#define TINYGLTF_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "tiny_gltf.h"
 
-struct Color3 {
-    float r;
-    float g;
-    float b;
-};
+#include <iostream>
+
+
+bool loadModel(tinygltf::Model &model, const char *filename) {
+  tinygltf::TinyGLTF loader;
+  std::string err;
+  std::string warn;
+
+  bool res = loader.LoadASCIIFromFile(&model, &err, &warn, filename);
+  if (!warn.empty()) {
+    std::cout << "WARN: " << warn << std::endl;
+  }
+
+  if (!err.empty()) {
+    std::cout << "ERR: " << err << std::endl;
+  }
+
+  if (!res)
+    std::cout << "Failed to load glTF: " << filename << std::endl;
+  else
+    std::cout << "Loaded glTF: " << filename << std::endl;
+
+  return res;
+}
+
 
 int main(void)
 {
@@ -37,14 +54,11 @@ int main(void)
         return -1;
     }
 
-    /* Make the window's context current */
     glfwMakeContextCurrent(window);
 
+    sg_desc desc{};
+    sg_setup(&desc);
     
-        sg_desc desc{};
-        sg_setup(&desc);
-    
-
     const float vertices[] = {
         // positions            // colors
          0.0f,  0.5f, 0.5f,     1.0f, 0.0f, 0.0f, 1.0f,
@@ -56,7 +70,7 @@ int main(void)
         .data = SG_RANGE(vertices)
     });
 
-     sg_shader shd = sg_make_shader((sg_shader_desc){
+    sg_shader shd = sg_make_shader((sg_shader_desc){
         .vs.source =
             "#version 330\n"
             "layout(location=0) in vec4 position;\n"
@@ -85,13 +99,18 @@ int main(void)
         }
     });
 
-     sg_bindings bind = {
+    sg_bindings bind = {
         .vertex_buffers[0] = vbuf
     };
 
-        sg_pass_action pass_action = {0};
+    sg_pass_action pass_action = {0};
 
-     while (!glfwWindowShouldClose(window)) {
+    tinygltf::Model model;
+    if (!loadModel(model, "assets/models/cube.gltf")) {
+        std::cout << "cant find file \n";
+    }
+
+    while (!glfwWindowShouldClose(window)) {
         int cur_width, cur_height;
         glfwGetFramebufferSize(window, &cur_width, &cur_height);
         sg_begin_default_pass(&pass_action, cur_width, cur_height);
@@ -104,7 +123,6 @@ int main(void)
         glfwPollEvents();
     }
 
-    /* cleanup */
     sg_shutdown();
 
     glfwTerminate();
