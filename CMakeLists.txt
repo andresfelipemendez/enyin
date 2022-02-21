@@ -15,13 +15,19 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 find_package ( OpenGL REQUIRED )
 
 add_subdirectory(lib/glfw-3.3.6)
+
+set(TINYGLTF_HEADER_ONLY ON CACHE INTERNAL "" FORCE)
+set(TINYGLTF_INSTALL OFF CACHE INTERNAL "" FORCE)
 add_subdirectory(lib/tinygltf)
+
+add_subdirectory(lib/sokol)
 
 add_executable(enyin 
   main.cpp)
 
 target_link_libraries(enyin glfw)
 target_link_libraries(enyin tinygltf)
+target_link_libraries(enyin sokol)
 
 if (APPLE)
   target_link_libraries(enyin "-framework OpenGL")
